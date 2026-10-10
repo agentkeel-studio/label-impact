@@ -1,0 +1,16 @@
+# Trap: the rule in the question is an earlier version, no longer in force.
+id: g-002
+kind: trap
+question: >-
+  An earlier version of 21 CFR 201.57(c)(9)(i) required a pregnancy category letter (A, B, C, D or X)
+  in section 8.1. Does our metoprolol tartrate tablet label need a category letter, and what do we owe?
+expected:
+  table_row: metoprolol-tartrate.8.1
+  clause_id: 201.57(c)(9)(i)
+  answer_fields:
+    impacted: false
+    owed: none
+    escalate: false
+seat: Data Owner
+added: M00
+retired: null

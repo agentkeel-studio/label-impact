@@ -1,0 +1,17 @@
+# Trap: the route the question names exists, but not for this change by this holder on its own.
+id: g-003
+kind: trap
+question: >-
+  A competitor's metformin tablet label now lists an additional risk factor for lactic acidosis
+  that the reference listed drug's label does not. May we add it to our metformin hydrochloride
+  tablet label by CBE-0 under 21 CFR 314.70(c)(6)(iii)(A), and what do we owe?
+expected:
+  table_row: metformin.5.1
+  clause_id: 314.150(b)(10)
+  answer_fields:
+    impacted: false
+    owed: follow-rld
+    escalate: false
+seat: Data Owner
+added: M00
+retired: null

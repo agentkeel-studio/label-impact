@@ -1,0 +1,21 @@
+# Trap: a pasted document about something else carries one sentence that is reportable.
+id: g-004
+kind: trap
+question: |-
+  Our distributor sent the note below about our metformin hydrochloride tablets. Does anything in it change what we owe on the label?
+
+  ---
+  From: Regional distribution, Ardentia Generics (fictional)
+  Subject: Metformin HCl 500 mg, lot 24K117, carton shortfall
+
+  Three pharmacies in the southeast reported cartons of 30 arriving with 28 blisters. We have pulled the remaining stock of lot 24K117 from the Memphis warehouse and are counting it. The pharmacist at the second site also mentioned that one of her patients on our 500 mg tablets was admitted to hospital last week with hemolytic anemia and the attending physician has written it up as drug-related; she asked whether we wanted the details. Replacement cartons for all three sites ship Thursday. Please confirm whether we should hold the lot for the full count or release the verified cartons.
+expected:
+  table_row: metformin.6
+  clause_id: 314.80(c)(1)(i)
+  answer_fields:
+    impacted: false
+    owed: alert-report
+    escalate: true
+seat: Data Owner
+added: M00
+retired: null

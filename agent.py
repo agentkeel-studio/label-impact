@@ -1,26 +1,31 @@
-"""refagent: title availability, from the rights table and one tool (SPEC/01 §6, ruling SCOPE).
+"""label-impact: regulatory impact on one label, from the label table and one tool.
 
-Sonnet 4.6 through the pinned inference profile, one tool, no knowledge base,
-no HITL branch and no memory: cuts 1, 3 and 4 are taken at M01 open
-(`milestones/M01/feasibility.md` §2.6). What is left is the claim's own
-half: refagent answers an ordinary golden, and the answer carries a
-`table_row` and a `clause_id` that exist (F1.4).
+An agent from agentkeel's template (agentkeel-studio/agent-template at
+66ca2e4, made from agentkeel 36c97dd). refagent's tool, schema and prompt
+were written for a film distributor's rights table; this file rewrites the
+tool for the label table and keeps everything else refagent's: Sonnet 4.6
+through the pinned inference profile, one tool, no knowledge base, no HITL
+branch and no memory.
 
 Two things this file is careful about.
 
-**The rights table is the truth** (SPEC/00 §9). `check_availability`
-returns one row and the clauses it can be read under. It does not decide
-whether we may publish; the model does, from the row. A tool that returned
-the verdict would make F1.4 a test of the tool.
+**The label table is the truth** (pharmadelta SPEC/00 §6, §9).
+`find_label_row` returns one row and the CFR clauses it can be read under.
+It does not decide whether the label is impacted or what is owed; the
+model does, from the row and the clause.
 
 **Where the row is read from.** The deployed runtime reads the DynamoDB
-table `GovernedAgent` creates. A run in the CI runner — which is what M01
-PR 2 measures, because the agent stack is deployed from `main` after PR 2
-merges — reads `data/rights_table.json`, the file the table is loaded
-from. Every observation records which, in `source`, so the envelope says
-what it read.
+table the platform creates and loads from `data/table.json`
+(`agentkeel-label-impact-rights`, agentkeel SPEC/06 §6 item 7). A run
+outside the runtime reads `data/table.json` beside this file. Every
+observation records which, in `source`.
 
-This module judges nothing and writes no envelope (P5).
+The row's fields are pharmadelta `milestones/M00/fields.md`'s; the clause
+ids are keys of `data/clauses.json`. The runtime image does not carry
+`data/` (agentkeel `infra/construct/agent.Dockerfile`), so the clause ids a
+section is read with are named here, as refagent names its own.
+
+This module judges nothing and writes no envelope.
 """
 
 from __future__ import annotations
@@ -33,36 +38,40 @@ from typing import Any
 from botocore.exceptions import BotoCoreError, ClientError
 
 BUNDLE = Path(__file__).parent
-ROOT = BUNDLE.parents[1]
 PROMPT = (BUNDLE / "prompt.txt").read_text(encoding="utf-8")
-CONTRACT = json.loads((BUNDLE / "tools" / "check_availability.json").read_text(encoding="utf-8"))
+CONTRACT = json.loads((BUNDLE / "tools" / "find_label_row.json").read_text(encoding="utf-8"))
 MANIFEST_PATH = BUNDLE / "manifest.yaml"
+TABLE_FILE = BUNDLE / "data" / "table.json"
 
 INFERENCE_CONFIG = {"temperature": 0, "maxTokens": 1024}
 MAX_TOOL_CALLS = 2  # one call, and one more if the model corrects its arguments
 
-# Which clauses a row can be read under, by what the row says. The tool hands
-# the candidates over; the question decides which one, and that is the
-# model's to say (Tool Owner, the contract's `clause_candidates`).
-ALWAYS = ["ML-2.1", "ML-2.3"]
-BY_FIELD = {
-    "window": ["ML-3.1"],
-    "holdback_until": ["HS-2", "HS-4"],
-    "clearance_expiry": ["MC-3", "MC-4"],
-    "embargo_lift_local": ["EM-1", "EM-2"],
-    "non_exclusive": ["ML-5.2"],
+# Which clauses a row can be read under, by its section. The row's own
+# `requirement` comes first; these follow. The tool hands the candidates over;
+# the question decides which one, and that is the model's to say (Tool Owner,
+# the contract's `clause_candidates`). Every id is a key of data/clauses.json.
+BY_SECTION = {
+    "8.1": ["201.57(c)(9)(i)", "314.150(b)(10)"],
+    "bw": ["314.150(b)(10)", "314.70(c)(6)(iii)(A)", "314.94(a)(8)(iv)", "314.97(a)"],
+    "5": ["314.150(b)(10)", "314.70(c)(6)(iii)(A)", "314.94(a)(8)(iv)", "314.97(a)"],
+    "5.1": ["314.150(b)(10)", "314.70(c)(6)(iii)(A)", "314.94(a)(8)(iv)", "314.97(a)"],
+    "6": ["314.98(a)", "314.80(c)(1)(i)", "314.80(a)-serious", "314.80(a)-unexpected"],
 }
+NO_ROW = ["314.150(b)(10)"]  # what a question about a section we hold no row for is read under
 
 
 def rights_rows(table_name: str | None, client: Any | None = None) -> tuple[list[dict[str, Any]], str]:
-    """Every row, and where it was read. DynamoDB when there is a table, else the file."""
+    """Every row, and where it was read. DynamoDB when there is a table, else the file.
+
+    Named as refagent names it: `server.py` calls it by this name and is
+    the template's, unchanged."""
     if table_name and client is not None:
         rows = []
         pages = client.get_paginator("scan").paginate(TableName=table_name)
         for page in pages:
             rows += [{k: _plain(v) for k, v in item.items()} for item in page["Items"]]
         return rows, "dynamodb"
-    return json.loads((ROOT / "data" / "rights_table.json").read_text(encoding="utf-8")), "data/rights_table.json"
+    return json.loads(TABLE_FILE.read_text(encoding="utf-8")), "data/table.json"
 
 
 def _plain(value: dict[str, Any]) -> Any:
@@ -76,35 +85,22 @@ def _plain(value: dict[str, Any]) -> Any:
     raise ValueError(f"unexpected attribute {value!r}")
 
 
-def check_availability(arguments: dict[str, Any], rows: list[dict[str, Any]], source: str) -> dict[str, Any]:
+def find_label_row(arguments: dict[str, Any], rows: list[dict[str, Any]], source: str) -> dict[str, Any]:
     """The tool. One row, and the clauses it can be read under. It decides nothing."""
     _refuse_unless_valid(arguments, CONTRACT["input"], "arguments")
-    match = [
-        row for row in rows
-        if row["title_id"] == arguments["title_id"]
-        and row["territory"] == arguments["territory"]
-        and row["platform"] == arguments["platform"]
-    ]  # fmt: skip
+    key = f"{arguments['label']}.{arguments['section']}"
+    match = [row for row in rows if row["table_row"] == key]
     if len(match) > 1:
-        # The tool returns "the governing row". Two rows on one key means the
-        # table does not say which governs, and choosing quietly would make
-        # that the tool's decision. Nothing holds the key unique today.
-        raise ValueError(
-            f"check_availability: {len(match)} rows for "
-            f"{arguments['title_id']}/{arguments['territory']}/{arguments['platform']}: "
-            + ", ".join(row["table_row"] for row in match)
-        )
+        # The table is keyed by table_row, unique. Two rows on one key means
+        # the table does not say which governs, and choosing quietly would
+        # make that the tool's decision.
+        raise ValueError(f"find_label_row: {len(match)} rows for {key}")
     if not match:
-        # No row is an answer: a grant that is not scheduled does not exist.
-        result = {"found": False, "row": None, "clause_candidates": ["ML-2.1"], "source": source}
+        result = {"found": False, "row": None, "clause_candidates": list(NO_ROW), "source": source}
     else:
         row = match[0]
-        candidates = list(ALWAYS) + BY_FIELD["window"]
-        for field in ("holdback_until", "clearance_expiry", "embargo_lift_local"):
-            if row.get(field):
-                candidates += BY_FIELD[field]
-        if not row["exclusive"]:
-            candidates += BY_FIELD["non_exclusive"]
+        candidates = [row["requirement"]]
+        candidates += [c for c in BY_SECTION.get(row["section"], []) if c not in candidates]
         result = {"found": True, "row": row, "clause_candidates": candidates, "source": source}
     _refuse_unless_valid(result, CONTRACT["output"], "result")
     return result
@@ -116,7 +112,7 @@ def _refuse_unless_valid(value: Any, schema: dict[str, Any], what: str) -> None:
 
     errors = sorted(Draft202012Validator(schema).iter_errors(value), key=str)
     if errors:
-        raise ValueError(f"check_availability {what}: " + "; ".join(e.message for e in errors))
+        raise ValueError(f"find_label_row {what}: " + "; ".join(e.message for e in errors))
 
 
 def tool_config() -> dict[str, Any]:
@@ -128,7 +124,7 @@ def tool_config() -> dict[str, Any]:
 
 
 def parse_json(text: str) -> dict[str, Any] | None:
-    """The outermost JSON object in the reply, or None. No repair (as the control does it)."""
+    """The outermost JSON object in the reply, or None. No repair."""
     start, end = text.find("{"), text.rfind("}")
     if start == -1 or end <= start:
         return None
@@ -140,7 +136,7 @@ def parse_json(text: str) -> dict[str, Any] | None:
 
 
 def guardrail_config(guardrail: dict[str, str] | None) -> dict[str, Any]:
-    """converse's guardrailConfig for the manifest's pin, or nothing when there is none (M03 PR 2)."""
+    """converse's guardrailConfig for the manifest's pin, or nothing when there is none."""
     if not guardrail:
         return {}
     return {"guardrailConfig": {"guardrailIdentifier": guardrail["id"], "guardrailVersion": guardrail["version"],
@@ -150,16 +146,15 @@ def guardrail_config(guardrail: dict[str, str] | None) -> dict[str, Any]:
 def question_content(question: str, guardrail: dict[str, str] | None) -> list[dict[str, Any]]:
     """The user's turn. Under a guardrail, the question is the only input it assesses (guardContent).
 
-    The system prompt and the tool's results (the rights table's rows) are
-    not the user's words; the probe of the deployed guardrail assessed the
-    question alone, and the run assesses what the probe did. The model
-    reads guardContent as it reads text. The answer is assessed whole.
+    The system prompt and the tool's results (the table's rows) are not the
+    user's words. The model reads guardContent as it reads text. The answer
+    is assessed whole.
     """
     return [{"guardContent": {"text": {"text": question}}}] if guardrail else [{"text": question}]
 
 
 def intervening_topics(trace: dict[str, Any]) -> list[str]:
-    """Every denied topic the guardrail's trace says it blocked on, input and output (rule-owner F3; commit 13)."""
+    """Every denied topic the guardrail's trace says it blocked on, input and output."""
     found: set[str] = set()
 
     def walk(node: Any) -> None:
@@ -183,7 +178,7 @@ def answer(client: Any, question: str, model_id: str, rows: list[dict[str, Any]]
 
     `guardrail` is the manifest's pin, `{"id", "version"}`, or None: the
     runner passes it from the manifest, the runtime from the environment
-    GovernedAgent sets from the same manifest.
+    the platform sets from the same manifest.
     """
     started = time.perf_counter()
     messages: list[dict[str, Any]] = [{"role": "user", "content": question_content(question, guardrail)}]
@@ -204,9 +199,8 @@ def answer(client: Any, question: str, model_id: str, rows: list[dict[str, Any]]
                 **guardrail_config(guardrail),
             )
         except (BotoCoreError, ClientError) as exc:
-            # A golden that spends and then fails has still spent. Raising here
-            # would throw away the usage of the calls before it, and the cap
-            # exists for exactly that run (Threshold Owner, M01 PR 2).
+            # A golden that spends and then fails has still spent; the usage
+            # of the calls before it is kept.
             failed = f"{type(exc).__name__}: {exc}"
             break
         for field in usage:
@@ -221,7 +215,7 @@ def answer(client: Any, question: str, model_id: str, rows: list[dict[str, Any]]
         results = []
         for use in uses:
             try:
-                result: Any = check_availability(use["input"], rows, source)
+                result: Any = find_label_row(use["input"], rows, source)
                 status = "success"
             except ValueError as exc:  # the model's arguments, or our own result: it is told either way
                 result, status = {"error": str(exc)}, "error"
