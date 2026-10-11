@@ -2,7 +2,7 @@
 # Every seat is a GitHub login with access to this repository; the platform
 # check refuses a pull request while any is null. The guardrail is the
 # platform's: an agent from the template pins it as given (M06).
-name: example-agent
+name: label-impact
 version: 1.0.0
 model:
   id: anthropic.claude-sonnet-4-6
@@ -33,13 +33,13 @@ data_class: internal
 deprecated_after: null
 rollout: all-at-once
 seats:
-  product: null
-  rule-owner: null
-  data-owner: null
-  tool-owner: null
-  threshold-owner: null
-  security: null
-  engineering: null
+  product: andaro74
+  rule-owner: andaro74
+  data-owner: andaro74
+  tool-owner: andaro74
+  threshold-owner: andaro74
+  security: andaro74
+  engineering: andaro74
 may_call: []
 may_be_called_by: []
 platform_version: 36c97ddaee93

@@ -1,0 +1,16 @@
+# Ordinary: a content rule for one labeling section is revised; one label, one section.
+id: g-001
+kind: ordinary
+question: >-
+  FDA has published a revision to 21 CFR 201.57(c)(9)(i), the content rule for section 8.1 Pregnancy.
+  Does it touch our lisinopril tablet label, and what do we owe?
+expected:
+  table_row: lisinopril.8.1
+  clause_id: 201.57(c)(9)(i)
+  answer_fields:
+    impacted: true
+    owed: follow-rld
+    escalate: false
+seat: Data Owner
+added: M00
+retired: null
