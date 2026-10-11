@@ -34,7 +34,7 @@ deprecated_after: null
 rollout: all-at-once
 seats:
   product: andaro74
-  rule-owner: null  # PLANT (pharmadelta M01, F1.1): unassigned on purpose; the lift is andaro74
+  rule-owner: andaro74
   data-owner: andaro74
   tool-owner: andaro74
   threshold-owner: andaro74
