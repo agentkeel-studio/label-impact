@@ -42,5 +42,7 @@ seats:
   engineering: andaro74
 may_call: []
 may_be_called_by: []
-callers: []
+callers:
+  - subject: pharmadelta   # andaro74/pharmadelta's public API, M03; one user in this agent's pool
+    issuer: self
 platform_version: m10

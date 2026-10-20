@@ -89,7 +89,7 @@
     "label_read_on": "2026-10-09",
     "format": "201.56(d)",
     "section": "6",
-    "section_title": "Adverse Reactions",
+    "section_title": "ADVERSE REACTIONS",
     "section_terms": "lactic acidosis; vitamin B12 deficiency; hypoglycemia; diarrhea; nausea/vomiting; flatulence; asthenia; indigestion; abdominal discomfort; headache; abnormal stools; myalgia; lightheadedness; dyspnea; nail disorder; rash; sweating increased; taste disorder; chest discomfort; chills; flu syndrome; flushing; palpitation; cholestatic, hepatocellular, and mixed hepatocellular liver injury",
     "section_terms_read_on": "2026-10-10",
     "requirement": "314.98(a)"
@@ -108,7 +108,7 @@
     "label_read_on": "2026-10-09",
     "format": "201.56(d)",
     "section": "5",
-    "section_title": "Warnings and Precautions",
+    "section_title": "WARNINGS AND PRECAUTIONS",
     "section_terms": "5.1 Abrupt Cessation of Therapy; 5.2 Heart Failure; 5.3 Bronchospastic Disease; 5.4 Pheochromocytoma; 5.5 Major Surgery; 5.6 Hypoglycemia; 5.7 Thyrotoxicosis; 5.8 Risk of Anaphylactic Reaction; 5.9 Peripheral Vascular Disease",
     "section_terms_read_on": "2026-10-10",
     "requirement": "314.150(b)(10)"
@@ -128,7 +128,7 @@
     "format": "201.56(d)",
     "section": "8.1",
     "section_title": "Pregnancy",
-    "section_terms": "Risk Summary; Clinical Considerations; Data",
+    "section_terms": "Risk Summary; Clinical consideration; Data",
     "section_terms_read_on": "2026-10-10",
     "requirement": "201.57(c)(9)(i)"
   }
