@@ -12,7 +12,7 @@ model:
 judge_model_id: null
 guardrail:
   id: 1088aw3ujhyd
-  version: '5'
+  version: "6"
 endpoint_allowlist:
 - bedrock-runtime
 - dynamodb
@@ -42,4 +42,4 @@ seats:
   engineering: andaro74
 may_call: []
 may_be_called_by: []
-platform_version: 36c97ddaee93
+platform_version: m10
