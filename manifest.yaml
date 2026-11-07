@@ -2,11 +2,10 @@
 # Every seat is a GitHub login with access to this repository; the platform
 # check refuses a pull request while any is null. The guardrail is this
 # agent's own, built by the platform from rules/ on its baseline (agentkeel
-# SPEC/09 section 2; quickstart section 5a). On the first pull request with
-# a rules/ folder the pin is a placeholder nothing answers to, id and
-# version as strings; after agentkeel deploys and writes the guardrail
-# agentkeel-label-impact to the registry, a second pull request pins the id
-# and version the registry holds.
+# SPEC/09 section 2; quickstart section 5a): agentkeel-label-impact, built
+# at the deploy of 410f9a8 (agentkeel run 41413769206, 2026-11-02) and read
+# from the registry row. The platform check holds this agent to this pin;
+# a change to rules/ gets a new version the same way.
 name: label-impact
 version: 1.0.0
 model:
@@ -16,7 +15,7 @@ model:
   region: us-west-2
 judge_model_id: null
 guardrail:
-  id: 1abe11mpact1
+  id: 4q5ebd7qov82
   version: "1"
 endpoint_allowlist:
 - bedrock-runtime
