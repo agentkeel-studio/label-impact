@@ -59,6 +59,14 @@ BY_SECTION = {
 }
 NO_ROW = ["314.150(b)(10)"]  # what a question about a section we hold no row for is read under
 
+# The model's number read as the table's text. The contract says `section` is
+# text; a model still writes a section number as a number (8.1, where the
+# table keys "8.1": pharmadelta M03 Unsure 23). These four numbers, and no
+# others, are read as the text they stand for before the contract is checked.
+# It is a reading, not a relaxation: every key's text is in the contract's
+# enum, and a number that is not a key is left as it is and refused.
+SECTION_AS_TEXT = {5: "5", 5.1: "5.1", 6: "6", 8.1: "8.1"}
+
 
 def rights_rows(table_name: str | None, client: Any | None = None) -> tuple[list[dict[str, Any]], str]:
     """Every row, and where it was read. DynamoDB when there is a table, else the file.
@@ -87,6 +95,7 @@ def _plain(value: dict[str, Any]) -> Any:
 
 def find_label_row(arguments: dict[str, Any], rows: list[dict[str, Any]], source: str) -> dict[str, Any]:
     """The tool. One row, and the clauses it can be read under. It decides nothing."""
+    arguments = _number_read_as_text(arguments)
     _refuse_unless_valid(arguments, CONTRACT["input"], "arguments")
     key = f"{arguments['label']}.{arguments['section']}"
     match = [row for row in rows if row["table_row"] == key]
@@ -104,6 +113,17 @@ def find_label_row(arguments: dict[str, Any], rows: list[dict[str, Any]], source
         result = {"found": True, "row": row, "clause_candidates": candidates, "source": source}
     _refuse_unless_valid(result, CONTRACT["output"], "result")
     return result
+
+
+def _number_read_as_text(arguments: dict[str, Any]) -> dict[str, Any]:
+    """The arguments, with a numeric `section` of SECTION_AS_TEXT as its text. Anything else, as it came.
+
+    A copy: the caller's arguments are what the model sent, and the call
+    record keeps them so. A boolean is not a number here."""
+    section = arguments.get("section") if isinstance(arguments, dict) else None
+    if isinstance(section, bool) or not isinstance(section, (int, float)) or section not in SECTION_AS_TEXT:
+        return arguments
+    return {**arguments, "section": SECTION_AS_TEXT[section]}
 
 
 def _refuse_unless_valid(value: Any, schema: dict[str, Any], what: str) -> None:

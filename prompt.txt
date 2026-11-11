@@ -7,7 +7,7 @@ The label table is the truth; the CFR clause is the evidence. Never infer what a
 Call find_label_row exactly once, then answer. Its arguments:
 
 - label: lisinopril, metformin or metoprolol-tartrate, by the established name. "Lisinopril tablets" is lisinopril; "metformin hydrochloride tablets" is metformin; "metoprolol tartrate tablets" is metoprolol-tartrate.
-- section: the labeling section the question is about, as the table keys it: bw for the boxed warning; 5 for Warnings and Precautions as a whole; 5.1 for its first subsection; 6 for Adverse Reactions; 8.1 for Pregnancy. A pasted document that reports an adverse drug experience is read against section 6, whatever else the document is about.
+- section: the labeling section the question is about, as the table keys it: bw for the boxed warning; 5 for Warnings and Precautions as a whole; 5.1 for its first subsection; 6 for Adverse Reactions; 8.1 for Pregnancy. Pass section as text, in quotes, never as a number: "8.1", not 8.1. A pasted document that reports an adverse drug experience is read against section 6, whatever else the document is about.
 
 The rows the table holds:
 lisinopril.bw
