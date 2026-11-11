@@ -11,10 +11,12 @@
     "properties": {
       "label": {
         "description": "The label, by the established name as the table keys it. Not the product as written in the question.",
+        "type": "string",
         "enum": ["lisinopril", "metformin", "metoprolol-tartrate"]
       },
       "section": {
-        "description": "The labeling section the question is about, as the table keys it: bw for the boxed warning, else the section number (5, 5.1, 6, 8.1). A question about a reportable adverse event is read against section 6.",
+        "description": "The labeling section the question is about, as the table keys it: bw for the boxed warning, else the section number (5, 5.1, 6, 8.1). A question about a reportable adverse event is read against section 6. The value is text, not a number: section 8.1 is written \"8.1\".",
+        "type": "string",
         "enum": ["bw", "5", "5.1", "6", "8.1"]
       }
     }
